@@ -1,0 +1,9 @@
+include ./header
+div.container
+  div.mongo-config
+    h2 Configure Mongo Connection
+    input.form-control(placeholder="Host" data-item="host" value="#{mongo.host || ''}")
+    input.form-control(placeholder="Port" data-item="port" value="#{mongo.port || ''}")
+    input.form-control(placeholder="Database" data-item="database" value="#{mongo.database || ''}")    
+    button.btn-white.save-mongo-connection Next
+include ./footer.jade

@@ -1,0 +1,18 @@
+include ./header
+div.container
+  form(id="configForm" name="uploader", action="/loadConfig", method="post", enctype="multipart/form-data")
+    span.btn.btn-default.btn-file Load Config
+      input(type="file", name="file", id="file")          
+  div.connect
+    h2 Connect to MySQL
+    input.form-control(placeholder="Host" data-item="host" value="#{mysql.host || ''}")
+    input.form-control(placeholder="Username" data-item="user" value="#{mysql.user || ''}")
+    input.form-control(placeholder="Password" type="password" data-item="password" value="#{mysql.password || ''}")
+    select.form-control(
+      disabled=!mysql.database && mysql.database=="" data-item="database")          
+      if(mysql.database && mysql.database!="")        
+        option(selected) #{mysql.database}
+      else
+        option(disabled) Select Database
+    button.btn-white.save-connection Next
+include ./footer.jade

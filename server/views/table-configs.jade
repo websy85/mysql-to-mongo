@@ -1,0 +1,14 @@
+include ./header
+div.container
+  div.table-config
+    h2 Configure Tables to Migrate
+    ul.table-list
+      each table in tables
+        li(data-table="#{table.name}")
+          h3 #{table.name}          
+          input.form-control(data-item="newName" placeholder="Rename table" value="#{table.newName || ''}")
+          span Custom SQL
+          textarea.form-control(data-item="customSql" placeholder="Custom SQL") #{table.customSql || ''}
+    button.btn-white.confirm-table-config Migrate
+    button.btn-white.save-config Save
+include ./footer.jade
