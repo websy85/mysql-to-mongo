@@ -2,6 +2,7 @@ var mysql = require('mysql');
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var Custom = require('./custom');
+var PostMigration = require('./postMigration');
 
 module.exports = {
   status: null,
@@ -20,9 +21,6 @@ module.exports = {
     var that = this;
     var mData = that.rows[that.rowIndex];
     mData._id = that.keyKeyMap[that.primaryKey][mData[that.primaryKey]];
-    if(that.table.name=="thread"){
-      console.log(mData._id);
-    }
     if(that.keyUpdates.length > 0){
       for(var i=0; i < that.keyUpdates.length; i++){
         if(mData[that.keyUpdates[i]] && that.keyUpdates[i]!=that.primaryKey && that.keyKeyMap[that.keyUpdates[i]][mData[that.keyUpdates[i]]]){  //as the _id field is now the primary key we'll leave the old primary key as is.
@@ -34,27 +32,25 @@ module.exports = {
         }
       }
     }
-    // if(that.table.name=="thread"){
-    //   console.log(mData._id);
-    // }
+    if(that.table.name=="thread"){
+       console.log(mData.title);
+    }
     //Execute any custom row changes before inserting the row
-    Custom.execRow(that.table.name, that.fields, mData, function(row){
+    Custom.execRow(that.table.newName || that.table.name, that.fields, mData, function(row){
       mRow = new that.models[that.table.newName || that.table.name](row);
       mRow.save(function(err){
         if(err){
           console.log(err);
-          console.log(row);
         }
         that.rowIndex++;
-        console.log('saving '+(that.rowIndex) + ' of ' +that.rows.length);
+        //console.log('saving '+(that.rowIndex) + ' of ' +that.rows.length);
         if(that.rowIndex==that.rows.length){
           if(that.tableIndex == that.tables.length){
             console.log('sending response');
             that.status = 0;
-            that.callbackFn.call(null, {tableKeyMap: that.tableKeyMap, keyKeyMap: that.keyKeyMap, models: that.models, fields:that.fieldDefs});
+            that.postMigrationRoutine();
           }
           else{
-            console.log('processing next table because table index is '+that.tableIndex+' and table count is '+that.tables.length);
             that.processTable();
           }
         }
@@ -75,7 +71,6 @@ module.exports = {
     that.primaryKey = that.tableKeyMap[that.table.name];
     console.log('pk - '+ that.primaryKey);
     var query = that.table.customSql || 'select * from ' + that.table.name;
-    console.log('query = ' + query);
     that.connection.query(query, function(err, rows, fields){
       that.rows = rows;
       that.fields = fields;
@@ -104,9 +99,8 @@ module.exports = {
       }
 
       //Execute any custom schema changes before creating the final Mongo Schema object
-      Custom.execSchema(that.table.name, fields, data, function(data){
+      Custom.execSchema(that.table.newName || that.table.name, fields, data, function(data){
         var schema = new Schema(data);
-        console.log('creating model for '+ that.table.name);
         that.models[that.table.newName || that.table.name] = mongoose.model(that.table.newName || that.table.name, schema);
 
         that.processRow();
@@ -116,6 +110,7 @@ module.exports = {
     })
   },
   migrate: function(req, res, callbackFn){
+    console.log('migration started');
     var that = this;
     that.status = 1;
     that.tableIndex = 0;
@@ -130,7 +125,6 @@ module.exports = {
     //create a map for the tables and their primary keys
     this.generateTableKeyMap(req.session.config.mysql.database, function(){
       that.tables = req.session.config.tables;
-      console.log(that.tables);
       console.log('Table Key Map Generated');
       //for each table being loaded get a list of primary keys and map a new ObejctId to them
       that.generateKeyMap(that.tables, function(){
@@ -139,6 +133,14 @@ module.exports = {
         that.table = that.tables[that.tableIndex];
         that.processTable();
       });
+    });
+  },
+  postMigrationRoutine: function(callbackFn){
+    //execute any post migration routines
+    //the purpose of this is to allow you to add data or custom models now that the existing data has been migrated
+    var that = this;
+    PostMigration.execPostMigrationRoutines(this.models, function(){
+      that.callbackFn.call(null, {tableKeyMap: that.tableKeyMap, keyKeyMap: that.keyKeyMap, models: that.models, fields:that.fieldDefs});
     });
   },
   mapDataType: {
@@ -182,7 +184,6 @@ module.exports = {
     }
     function mapKeys(table, isLast){
       var query = 'select distinct '+that.tableKeyMap[table.name]+' as id from '+ table.name;
-      console.log(query);
       that.connection.query(query, function(err, rows, fields){
         if(err){
           console.log(err);
@@ -193,7 +194,6 @@ module.exports = {
           that.keyKeyMap[that.tableKeyMap[table.name]][rows[r]["id"]] = mongoose.Types.ObjectId();
         }
         if(isLast){
-          console.log('calling callback because isLast = '+isLast);
           callbackFn.call(null);
         }
       });

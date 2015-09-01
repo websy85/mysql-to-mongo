@@ -64,14 +64,14 @@ router.post('/tables/set', function(req, res){
       else{
         if(!migration.status || migration.status==0){
         //start the migration
-          console.log('starting migration');
+          res.connection.setTimeout(0);
           migration.migrate(req, res, function(data){
             res.send({maps:data, tables:req.session.config.tables});
           });
         }
         else{
           //migration is already in progress and for some reason we're trying to run it again
-          console.log('attempted to run migration whilst already in progress');          
+          console.log('attempted to run migration whilst already in progress');
         }
       }
     }

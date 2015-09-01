@@ -55,20 +55,32 @@ $('.mongo-config .save-mongo-connection').click(function(event){
   });
 });
 
+$('.table-select .available-tables li').dblclick(function(event){
+  var newTableToMigrate = $(this).clone();
+  $(newTableToMigrate).attr("data-id", getInt());
+  $('.table-list.selected-tables').append($(newTableToMigrate));
+});
+
+$('.table-select .selected-tables li').dblclick(function(event){
+  $(this).remove();
+});
+
 $('.table-select .confirm-tables').click(function(event){
   var tables = [];
   var configure = $(this).text() == 'Configure';
-  $('.table-select input[type="checkbox"]:checked').each(function(index, item){
+  $('.table-select .selected-tables li').each(function(index, item){
     var tableName = $(item).attr('data-table');
+    var id = $(item).attr('data-id');
     tables.push({
+      id: id,
       name: tableName,
-      newName: $('[data-table="'+tableName+'"][data-item="newName"]').val(),
-      customSql: $('[data-table="'+tableName+'"][data-item="customSql"]').val()
+      newName: $('[data-id="'+id+'"] [data-table="'+tableName+'"][data-item="newName"]').val(),
+      customSql: $('[data-id="'+id+'"] [data-table="'+tableName+'"][data-item="customSql"]').val()
     });
 
-    if(index == $('.table-select input[type="checkbox"]:checked').length -1){
+    if(index == $('.table-select .selected-tables li').length -1){
       helper.SetTables(tables, configure, function(result){
-        console.log(result);
+
       });
     }
   });
@@ -78,6 +90,7 @@ $('.table-config .confirm-table-config').click(function(event){
   var tables = [];
   $('.table-config [data-table]').each(function(tableIndex, item){
     var table = {
+      id: $(this).attr('data-id'),
       name: $(this).attr('data-table')
     };
     tables.push(table);
@@ -88,7 +101,7 @@ $('.table-config .confirm-table-config').click(function(event){
     });
     if(tableIndex == $('.table-config [data-table]').length -1){
       helper.SetTables(tables, false, function(result){
-        console.log(result);
+      
       });
     }
   });
@@ -98,6 +111,7 @@ $('.table-config .save-config').click(function(event){
   var tables = [];
   $('.table-config [data-table]').each(function(tableIndex, item){
     var table = {
+      id: $(this).attr('data-id'),
       name: $(this).attr('data-table')
     };
     tables.push(table);
@@ -119,3 +133,7 @@ $('.table-config .save-config').click(function(event){
 $('#configForm').on('change', '#file', function(event){
   $('#configForm').submit();
 });
+
+function getInt(){
+  return $(".selected-tables li").length;
+}
