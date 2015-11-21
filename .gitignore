@@ -1,6 +1,6 @@
 node_modules/
-server/controllers/custom/
+server/controllers/custom/*
 !server/controllers/custom/index.js
-server/controllers/postMigration/
+server/controllers/postMigration/*
 !server/controllers/postMigration/index.js
 attachments/

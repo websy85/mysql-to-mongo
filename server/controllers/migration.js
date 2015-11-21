@@ -20,23 +20,27 @@ module.exports = {
   processRow: function(){
     var that = this;
     var mData = that.rows[that.rowIndex];
-    mData._id = that.keyKeyMap[that.primaryKey][mData[that.primaryKey]];
-    if(that.keyUpdates.length > 0){
-      for(var i=0; i < that.keyUpdates.length; i++){
-        if(mData[that.keyUpdates[i]] && that.keyUpdates[i]!=that.primaryKey && that.keyKeyMap[that.keyUpdates[i]][mData[that.keyUpdates[i]]]){  //as the _id field is now the primary key we'll leave the old primary key as is.
-          mData[that.keyUpdates[i]] = that.keyKeyMap[that.keyUpdates[i]][mData[that.keyUpdates[i]]];
-        }
-        else if(that.keyUpdates[i]!=that.primaryKey){
-          //delete the field so we don't get an Object cast error
-          delete mData[that.keyUpdates[i]]
-        }
-      }
-    }
-    if(that.table.name=="thread"){
-       console.log(mData.title);
+    mData._id = that.keyKeyMap[that.primaryKey][mData[that.primaryKey]] || mongoose.Types.ObjectId();
+    if(that.table.name=="user"){
+      console.log('primary key - ' + that.primaryKey);
+      console.log('id - ' + mData[that.primaryKey]);
+      console.log('keyKeyMap - ' + that.keyKeyMap);
     }
     //Execute any custom row changes before inserting the row
     Custom.execRow(that.table.newName || that.table.name, that.fields, mData, function(row){
+      //update foreign keys
+      if(that.keyUpdates.length > 0){
+        for(var i=0; i < that.keyUpdates.length; i++){
+          if(mData[that.keyUpdates[i]] && that.keyUpdates[i]!=that.primaryKey && that.keyKeyMap[that.keyUpdates[i]][mData[that.keyUpdates[i]]]){  //as the _id field is now the primary key we'll leave the old primary key as is.
+            mData[that.keyUpdates[i]] = that.keyKeyMap[that.keyUpdates[i]][mData[that.keyUpdates[i]]];
+          }
+          else if(that.keyUpdates[i]!=that.primaryKey){
+            //delete the field so we don't get an Object cast error
+            delete mData[that.keyUpdates[i]]
+          }
+        }
+      }
+      //end
       mRow = new that.models[that.table.newName || that.table.name](row);
       mRow.save(function(err){
         if(err){
@@ -86,7 +90,7 @@ module.exports = {
       for(var f in fields){
         //if the field exists in the primary key map but is not the primary key in this table
         //then the type should be a mongo ObjectId
-        if(that.keyKeyMap[fields[f].name]!=undefined && fields[f].name.trim() != that.primaryKey.trim()){
+        if(that.keyKeyMap[fields[f].name]!=undefined && ((that.primaryKey && fields[f].name.trim() != that.primaryKey.trim()) || that.primaryKey==undefined)){
           data[fields[f].name] = {type: Schema.ObjectId};
         }
         else{
@@ -139,7 +143,7 @@ module.exports = {
     //execute any post migration routines
     //the purpose of this is to allow you to add data or custom models now that the existing data has been migrated
     var that = this;
-    PostMigration.execPostMigrationRoutines(this.models, function(){
+    PostMigration.execPostMigrationRoutines(this.models, this.keyKeyMap, function(){
       that.callbackFn.call(null, {tableKeyMap: that.tableKeyMap, keyKeyMap: that.keyKeyMap, models: that.models, fields:that.fieldDefs});
     });
   },
