@@ -55,6 +55,7 @@ var mysqlhelper = (function(){
     },
     SetTables:{
       value: function(tables, configure, callbackFn){
+        $.post({timeout:360000});
         $.post('/mysql/tables/set', {tables: tables, configure: configure})
         .success(function(data){
           if(data.redirect){

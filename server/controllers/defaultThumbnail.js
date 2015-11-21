@@ -1,13 +1,27 @@
 var request = require('request');
+var base64 = require('node-base64-image');
 
-var defaultUrl = "http://branch.qlik.com/projects/images/qlik/thread/thumbnails/default/1.jpg";
-request(defaultUrl, function(error, response, body){
-  console.log('default image status - ');
-  console.log(response.statusCode);
-  if(error){
-    console.log(err);
-    defaultImage = "";
+var defaultImage = (function(){
+  function defaultImage(){
+    var defaultUrl = "http://branch.qlik.com/projects/images/qlik/thread/thumbnails/default/1.jpg";
+    var that=this;
+    base64.base64encoder(defaultUrl, {}, function (err, image) {
+      if(err){
+        console.log(err);
+        image = "";
+      }
+      console.log(image);
+      that.image = image;
+    });
   }
-  defaultImage = body;
-  module.exports = defaultImage;
-});
+  defaultImage.prototype = Object.create(Object.prototype, {
+    image: {
+      writable: true,
+      value: ""
+    }
+  });
+
+  return defaultImage;
+})();
+
+module.exports = new defaultImage();

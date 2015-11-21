@@ -2,13 +2,23 @@ include ./header
 div.container
   div.table-select
     h2 Select Tables to Migrate
-    ul.table-list
-      each table in tables
-        li
-          input(type="checkbox" data-table="#{table.name}" checked=table.checked) 
-          span #{table.name} (#{table.row_count})
-          input.hidden.form-control(data-item="newName" data-table="#{table.name}" placeholder="Rename table" value="#{table.newName || ''}")          
-          input.hidden.form-control(data-item="customSql" data-table="#{table.name}" placeholder="Custom SQL" value="#{table.customSql || ''}")      
-    button.btn-white.confirm-tables Configure
-    button.btn-white.confirm-tables Migrate
+    div.col-md-3
+      ul.table-list.available-tables
+        each table in availabletables
+          li(data-table="#{table.name}")
+            //input(type="checkbox" data-table="#{table.name}" checked=table.checked) 
+            span #{table.name} (#{table.row_count})
+            input.hidden.form-control(data-item="newName" data-table="#{table.name}" placeholder="Rename table" value="#{table.newName || ''}")          
+            input.hidden.form-control(data-item="customSql" data-table="#{table.name}" placeholder="Custom SQL" value="#{table.customSql || ''}")                  
+    div.col-md-3
+      ul.table-list.selected-tables
+        each table in configtables
+          //if table.checked
+          li(data-table="#{table.name}" data-id="#{table.id}")
+            span #{table.name}
+            input.hidden.form-control(data-item="newName" data-table="#{table.name}" placeholder="Rename table" value="#{table.newName || ''}")          
+            input.hidden.form-control(data-item="customSql" data-table="#{table.name}" placeholder="Custom SQL" value="#{table.customSql || ''}")                 
+    div.col-md-3
+      button.btn-white.confirm-tables Configure
+      button.btn-white.confirm-tables Migrate
 include ./footer.jade

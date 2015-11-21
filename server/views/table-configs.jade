@@ -4,7 +4,7 @@ div.container
     h2 Configure Tables to Migrate
     ul.table-list
       each table in tables
-        li(data-table="#{table.name}")
+        li(data-table="#{table.name}" data-id="#{table.id}")
           h3 #{table.name}          
           input.form-control(data-item="newName" placeholder="Rename table" value="#{table.newName || ''}")
           span Custom SQL

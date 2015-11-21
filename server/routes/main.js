@@ -13,15 +13,14 @@ module.exports = function(app){
     if(!req.session.config){
       req.session.config = {mysql:{}, mongo:null, tables:[]};
     }
-    console.log(req.session.config.tables);
     res.render('../server/views/index.jade', {mysql: req.session.config.mysql});
   });
 
   app.get('/tableselect', function(req,res){
-    mysqlController.getTables(req, res, function(tables){
-      mysqlController.compare(tables, req.session.config.tables, function(tables){
-        res.render('../server/views/table-select.jade', {tables:tables});
-      });
+    mysqlController.getTables(req, res, function(availabletables){
+      //mysqlController.compare(tables, req.session.config.tables, function(tables){
+        res.render('../server/views/table-select.jade', {availabletables:availabletables, configtables: req.session.config.tables});
+      //});
     });
   });
 
@@ -52,7 +51,6 @@ module.exports = function(app){
   });
 
   app.get('/configtables', function(req, res){
-    console.log(req.session.config.tables);
     res.render('../server/views/table-configs.jade', {tables:req.session.config.tables});
   });
 
@@ -76,7 +74,6 @@ module.exports = function(app){
     req.busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
         file.on('data', function(data){
           req.session.config = JSON.parse(data.toString());
-          console.log(req.session.config);
         });
         file.on('end', function(){
           res.redirect('/');
